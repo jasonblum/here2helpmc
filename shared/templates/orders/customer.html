@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags i18n static sekizai_tags %}
+
+
+{% block content %} 
+
+	<div class="card">
+		<div class="card-header">
+				{% if event == 'order-just-placed' %}	
+					{% trans 'Thank you! Your request has been submitted!' %}
+				{% else %}
+					Status of: {{ customer }}
+				{% endif %}
+		</div>
+		<div class="card-body">
+			<p class="card-text">
+
+				{% if event == 'order-just-placed' %}	
+					<p>If we have any questions or concerns about your request, we will contact you via the phone number or email address you provided.</p>
+					<p>Otherwise, you should receive an email or text on or before your delivery day that includes an approximate delivery time.</p>
+					<p>Please note that if you live in an apartment building, you must meet the volunteer outside. Please do not ask the volunteer to come inside.</p>
+					<p>If you have any questions or concerns, please reach out to us at <a href="mailto: here2helpmc@gmail.com">here2helpmc@gmail.com</a> or call 240-630-2733.</p>
+					<p>Thank you, and stay safe!</p>
+				{% elif event == 'orders-already-filled' %}	
+					<p>You have already placed orders for this and next week.  Please see the history your orders below. </p>
+				{% endif %}
+
+				<hr/>
+				<p>
+					Find information on other area food resources at:
+					<ul>
+						<li>Montgomery County Food Assistance Resource Map (<a href="https://mocofoodcouncil.org/food-assistance-resource-map/">https://mocofoodcouncil.org/food-assistance-resource-map/</a>)</li>
+						<li>Montgomery County COVID-19: Food Resources Information (<a href="https://www.montgomerycountymd.gov/HHS/RightNav/Coronavirus-food.html">https://www.montgomerycountymd.gov/HHS/RightNav/Coronavirus-food.html</a>)</li>
+					</ul>
+				</p>
+				
+
+
+				<p/>
+				
+				<div class="jumbotron">
+					@Sharon: 
+					<p>How about we put the form for <a href="https://trello.com/c/fAsCJM5u/38-family-details">https://trello.com/c/fAsCJM5u/38-family-details</a> here?</p>
+					<p>Something like this:</p>
+					<hr/>
+					<p>OPTIONAL! Would you share additional anonymous information about your household, to help us apply for additional grant money and advise MCPS on addressing needs?</p>
+					<p>
+						<ul>FORM:
+							<li>Family Member 1 DOB</li>
+							<li>Family Member 1 School</li>
+							<li>Family Member 1 Race</li>
+							<li>Family Member 1 COVID Status</li>
+						</ul>
+						<ul>FORM:
+							<li>Family Member 2 DOB</li>
+							<li>Family Member 2 School</li>
+							<li>Family Member 2 Race</li>
+							<li>Family Member 2 COVID Status</li>
+						</ul>
+						<ul>...etc (with buttons to remove or add more members)
+						</ul>
+					</p>
+				</div>
+
+				<p/>&nbsp;
+
+
+				<p>
+					Requests placed by customer using passphrase "{{ customer.passphrase }}" at address: {{ customer.address }}
+				</p>
+				<table id="orders" class="display">
+					<thead>
+						<tr>
+							<th>Status</th>
+							<th>Datetime Requested</th>
+							<th>Date Delivery Requested</th>
+							<th>Datetime Delivered</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for order in customer.orders.all %}
+							<tr>
+								<td>{{ order.status }}</td>
+								<td>{{ order.dt_created }}</td>
+								<td>{{ order.dt_requested_delivery }}</td>
+								<td>{{ order.dt_delivered }}</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>				
+
+
+			</p>
+		</div>
+	</div>
+
+
+
+	{% addtoblock "js" %}
+	    <script type="text/javascript">
+            $(document).ready(function() {
+				$('#orders').DataTable();
+            });
+        </script>        
+    {% endaddtoblock %}
+
+
+{% endblock content %}

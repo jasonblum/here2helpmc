@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags i18n static sekizai_tags shared %}
+
+
+{% block content %} 
+
+	<div class="card">
+		<div class="card-header">
+			<span class="display-4">{% trans 'Make a new request.' %}</span>
+			<!-- <i class="fas fa-shopping-basket fa-4x text-dark float-right"></i> -->
+		</div>
+		<div class="card-body">
+			<p class="card-text">
+
+                {% crispy form %}
+
+			</p>
+		</div>
+	</div>
+
+	{% addtoblock "js" %}
+
+	    <script type="text/javascript">
+
+            $(document).ready(function() {
+
+
+                {% if not form.instance.pk %}
+                    {% get_current_language as LANGUAGE_CODE %}
+                    $('#id_preferred_language').val('{{ LANGUAGE_CODE }}')
+                {% endif %}
+
+                $('#id_schools').select2();
+                $('#id_phone').mask('(000) 000-0000');
+                $('#id_secondary_phone').mask('(000) 000-0000');
+
+                {% for week in available_dates %}
+                    {% for day in week %}
+                        {% if forloop.first %}
+                            var $optgroup = $("<optgroup label='{{ day }}'>");
+                        {% else %}
+                            $optgroup.append(new Option( '{{ day|friendly_date }}', '{{ day.to_datetime_string }}'));
+                        {% endif %}
+                    {% endfor %}
+                    $('#id_dt_requested_delivery').append($optgroup);
+                {% endfor %}
+
+            });
+
+        </script>
+        
+        <script src="{% static '/js/jquery.geocomplete.min.js' %}"></script>
+
+     
+        
+    {% endaddtoblock %}
+
+
+{% endblock content %}

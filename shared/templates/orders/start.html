@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags i18n static sekizai_tags %}
+
+
+{% block content %} 
+
+
+
+
+	<div class="card">
+		<div class="card-header">
+			<span class="display-4">{% trans 'Make a new request.' %}</span>
+			<!-- <i class="fas fa-shopping-basket fa-4x text-dark float-right"></i> -->
+		</div>
+		<div class="card-body">
+			<p class="card-text">
+				<div class="container">
+					<div class="row">
+						<div class="col">
+							<div class="card">
+								<div class="card-body">
+									<p class="card-text">
+										<div class='text-center'>
+											<h4>I have <strong>never</strong> made a request before:</h4>
+											<a href="{% url 'orders:order' %}">
+												<input type="submit" value="Make a request!" class="btn btn-primary btn-lg m-3">
+											</a>
+	
+										</div>
+									</p>
+								</div>
+							</div>
+						</div>
+						<div class="col">
+							<div class="card">
+								<div class="card-body">
+									<p class="card-text">
+										<h4 class='text-center'>{% trans 'I have made a request before' %}:</h4>
+										<br/>
+										{% crispy form %}
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</p>
+		</div>
+	</div>
+							
+
+
+
+
+	{% addtoblock "js" %}
+
+        <script src="{% static '/js/jquery.geocomplete.min.js' %}"></script>   
+        
+    {% endaddtoblock %}
+
+
+{% endblock content %}

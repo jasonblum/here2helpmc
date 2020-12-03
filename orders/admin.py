@@ -1,0 +1,151 @@
+import pendulum
+from django.contrib import admin, messages
+from django.forms import TextInput, Textarea, EmailInput
+from django.db import models
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.utils.safestring import mark_safe
+
+from address.models import AddressField
+from address.forms import AddressWidget
+
+from .models import Order, Customer, School, Supporter, Donation, Document, DropoffLocation
+
+
+
+def do_something_with_these_orders(modeladmin, request, queryset):
+	selected_order_ids = [o.id for o in queryset]
+	orders = Order.objects.filter(pk__in=selected_order_ids)
+	return render(request, 'orders/do_something_with_these_orders.html', {
+		'orders':orders,
+	})	
+
+
+def do_something_else_with_these_orders(modeladmin, request, queryset):
+	selected_order_ids = [o.id for o in queryset]
+	orders = Order.objects.filter(pk__in=selected_order_ids)
+	return render(request, 'orders/do_something_with_these_orders.html', {
+		'orders':orders,
+	})	
+
+
+def assign_these_orders_to_a_driver(modeladmin, request, queryset):
+	selected_order_ids = [o.id for o in queryset]
+	drivers = Supporter.objects.filter(is_driver=True)
+
+	orders = Order.objects.filter(pk__in=selected_order_ids)
+	return render(request, 'orders/assign_orders_to_drivers.html', {
+		'orders':orders,
+		'drivers': drivers,
+	})	
+
+
+class DTRequestedDeliveryFilter(admin.SimpleListFilter):
+	title = 'Requested Delivery Date'
+	parameter_name = 'dt_requested_delivery' # you can put anything here
+
+	def lookups(self, request, model_admin):
+		start = pendulum.now().subtract(weeks=1)
+		end = pendulum.now().add(weeks=100)
+		dates = Order.objects.filter(dt_requested_delivery__range=(start, end)).values_list('dt_requested_delivery', flat=True)
+		dates = list(set(dates))
+		dates_to_return = []
+		for date in dates:
+			dates_to_return.append((date, date.strftime('%A %B %d, %Y')))
+		return sorted(dates_to_return)
+
+	def queryset(self, request, queryset):
+		if self.value():
+			return queryset.distinct().filter(dt_requested_delivery=self.value())
+		else:
+			return queryset
+		
+		
+# class OpenDeliveriesFilter(admin.SimpleListFilter):
+# 	title = 'Open Deliveries'
+# 	parameter_name = 'delivery_id' # you can put anything here
+
+# 	def lookups(self, request, model_admin):
+# 		deliveries = []
+# 		for delivery in Delivery.objects.filter(is_closed=False):
+# 			deliveries.append((delivery.pk, delivery))
+# 		return deliveries
+
+# 	def queryset(self, request, queryset):
+# 		if self.value():
+# 			return queryset.distinct().filter(delivery=self.value())
+# 		else:
+# 			return queryset
+		
+		
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+	search_fields = ['customer__address__raw', ]
+	list_display = ('status', 'customer', 'customer_zip', 'dt_created', 'dt_ready', 'dt_requested_delivery', 'driver', 'dt_delivered', 'dt_cancelled', )
+	list_filter = ('status', 'driver', 'customer_zip', DTRequestedDeliveryFilter, )
+	actions = (assign_these_orders_to_a_driver, do_something_with_these_orders, do_something_else_with_these_orders, )
+
+	def has_add_permission(self, request, obj=None):
+		return False
+
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
+	search_fields = ['email', 'address__raw', ]
+	list_display = ('passphrase', 'address', 'email', 'phone', 'orders_created', 'orders_delivered', 'dt_created', )
+	list_filter = ('address__locality', )
+	formfield_overrides = {
+		models.CharField: {'widget': TextInput(attrs={'size':'60'})},
+		AddressField: {'widget': AddressWidget(attrs={'size':'80'})},
+		models.EmailField: {'widget': EmailInput(attrs={'size':'60'})},
+	}
+
+	def has_add_permission(self, request, obj=None):
+		return False
+
+
+class FilterByDriversZipCode(admin.SimpleListFilter):
+	title = 'Driver\'s Zip Code (if driver)'
+	parameter_name = 'zip' # you can put anything here
+
+	def lookups(self, request, model_admin):
+		zips = list((z, z) for z in Supporter.objects.filter(is_driver=True).values_list('address__locality__postal_code', flat=True).distinct())
+		return zips
+
+	def queryset(self, request, queryset):
+		if self.value():
+			return queryset.distinct().filter(is_driver=True, address__locality__postal_code=self.value())
+		else:
+			return queryset
+		
+		
+
+
+@admin.register(Supporter)
+class SupporterAdmin(admin.ModelAdmin):
+	list_display = ('first_name', 'last_name', 'email', 'phone', 'address', 'closest_dropoff_location', 'is_driver', )
+	search_fields = ['first_name', 'last_name', 'email', 'phone', 'address__raw', ]
+	list_filter = ('is_driver', 'address__locality__postal_code', 'closest_dropoff_location', FilterByDriversZipCode, )
+
+
+@admin.register(DropoffLocation)
+class DropoffLocationAdmin(admin.ModelAdmin):
+	list_display = ('__str__', 'number_of_supporters')
+
+
+@admin.register(School)
+class SchoolAdmin(admin.ModelAdmin):
+	list_display = ('mcps_school_id', 'name', 'school_type', 'address', 'raw_address', 'phone', )
+
+
+@admin.register(Donation)
+class DonationAdmin(admin.ModelAdmin):
+	search_fields = ('supporter', )
+	list_filter = ('method', )
+	list_display = ('__str__', 'dt_created', 'date_received', 'date_thanked', 'thanked_by', 'ok_to_publicly_recognize', )	
+
+
+@admin.register(Document)
+class DocumentAdmin(admin.ModelAdmin):
+	list_display = ('__str__', )	
+
+

@@ -1,0 +1,39 @@
+{% load static %}
+{% load i18n %}
+
+<nav class="navbar navbar-expand-md navbar-dark bg-primary mb-4">
+	<button type="button" class="btn btn-lg btn-light">
+		<a href="{% url 'home' %}"><img src="{% static 'shared/images/h2hlogo.png' %}"></a>
+	</button>
+	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon"></span>
+	</button>
+
+	<div class="collapse navbar-collapse" id="navbarCollapse">
+		<ul class="navbar-nav ml-auto">
+
+
+
+			<form id="select_language_form" action="{% url 'set_language' %}" method="post">
+				{% csrf_token %}
+				<input name="next" type="hidden" value="{{ redirect_to }}">
+
+				<li class="nav-item ml-2">
+					<select name="language" id="select_language" class="form-control form-control-lg text-success">
+						{% get_current_language as LANGUAGE_CODE %}
+						{% get_available_languages as LANGUAGES %}
+						{% get_language_info_list for LANGUAGES as languages %}
+						{% for language in languages %}
+							<option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
+								{{ language.name_local }} ({{ language.code }})
+							</option>
+						{% endfor %}
+					</select>
+				</li>
+			</form>
+
+
+
+		</ul>
+	</div>
+</nav>

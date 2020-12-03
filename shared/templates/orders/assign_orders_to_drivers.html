@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags i18n static sekizai_tags %}
+
+
+{% block content %} 
+
+
+
+    <div class="card">
+        <div class="card-header">
+            <span class="display-5">Assign Orders to a Driver</span>
+            <span class="display-5 float-right">
+                <a href="{% url 'admin:orders_order_changelist' %}">Back to orders</a>
+            </span>
+        </div>
+        <div class="card-body">
+            <p class="card-text">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        Step 1: Select an driver to assign orders to:
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="delivery">Select a Driver:</label>
+                        <select name="driver" id="driver" class="form-control form-control-lg">
+                            {% for driver in drivers %}
+                                <option value="{{ driver.pk }}">{{ driver }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-5">
+                        Step 2: Check off which orders to assign:
+                        <p/>&nbsp;<p/>
+                        If it helps, all the addresses on the right are here, to copy-paste into Circuit:
+                        <textarea class="form-control" rows="8" width="80%">{% for order in orders %}{{ order.customer.address }}
+{% endfor %}</textarea>
+                    </div>
+                    <div class="form-group col-md-1"></div>
+                    <div class="form-group col-md-6">
+                        {% for order in orders %}
+                            <input class="form-check-input" name="orders" type="checkbox" id="order{{ order.pk }}">
+                            <label class="form-check-label" for="order{{ order.pk }}">{{ order }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                    </div>
+                </div>
+            </p>
+        </div>
+        <div class="card-footer">
+            <p class="card-text text-center">
+                <button type="button" id="assign_orders" class="btn btn-primary btn-lg">Assign these orders to this driver and set their status to "processed and assigned"!</button>
+            </p>
+        </div>
+    </div>
+
+
+
+{% addtoblock "js" %}
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#ready_orders').click(function(){
+            alert('This button doesnt do anything yet, but I would suggest that it assigns the selected orders above to the selected driver, and updates their statuses to "processed"...\n\nthe user is then redirected back to the orders page.');
+        })
+    });
+</script>
+{% endaddtoblock %}
+
+
+{% endblock content %}
+
+

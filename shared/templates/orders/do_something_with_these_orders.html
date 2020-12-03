@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags i18n static sekizai_tags %}
+
+
+{% block content %} 
+
+<div class="card">
+    <div class="card-header">
+        <span class="display-5">Do something with these orders</span>
+        <span class="display-5 float-right">
+            <a href="{% url 'admin:orders_order_changelist' %}">Back to orders</a>
+        </span>
+        
+    </div>
+    <div class="card-body">
+        <p class="card-text">
+            You selected these orders - and this page could have buttons like the one below to change the status of these orders, associate them with a particular driver, send out emails, or just give you a list of addresses to copy-paste into circuit?
+            <ul>
+                {% for order in orders %}
+                    <li>{{ order }}
+                        <ul>
+                            <li>Customer email: {{ order.customer.email }}</li>
+                            <li>Order status: {{ order.status }}</li>
+                            <li>Delivery: {{ order.delivery }}</li>
+                            <li>Order ID: {{ order.id }}</li>
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        </p>
+    </div>
+    <div class="card-footer">
+        <p class="card-text text-center">
+            <button type="button" id="ready_orders" class="btn btn-success btn-lg">Do something further with these orders...</button>
+
+        </p>
+    </div>
+</div>
+
+
+    {% addtoblock "js" %}
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $('#ready_orders').click(function(){
+                    alert('This button doesnt do anything yet...');
+                })
+            });
+        </script>
+    {% endaddtoblock %}
+
+
+
+
+{% endblock content %}
+
+

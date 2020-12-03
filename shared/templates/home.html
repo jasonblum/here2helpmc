@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load i18n static sekizai_tags %}
+
+{% block content %} 
+
+
+
+    <div class="card">
+        <div class="card-header">
+            <span class="display-4">{% trans "Welcome to Here2Help!" %}</span>
+            <i class="fas fa-shopping-basket fa-4x text-dark float-right"></i>
+        </div>
+        <div class="card-body">
+            <h4 class='card-title'>
+                <b>{{ stats.customers }}</b> families, 
+                in <strong>{{ stats.zipcodes_served }}</strong> Montgomery County zip codes, 
+                with children in <strong>{{ stats.school_communities_served }}</strong> MC Public Schools,
+                have received <strong>{{ stats.total_pounds_delivered|floatformat:2 }}</strong> pounds of food in <strong>{{ stats.orders_delivered }}</strong> orders since <strong>{{ stats.start_date|date:"F j, Y" }}</strong>!
+            </h5>
+
+            <hr/>
+            <p>Here2Help is a grassroots, all-volunteer organization that combats local food insecurity by providing free grocery essentials to the area's most vulnerable residents.</p>
+            <p>Headquartered in Chevy Chase, MD, Here2Help makes safe, contact-free deliveries to Montgomery County, MD, residents who request them.</p>
+            <p>Please be aware that we mostly distribute non-perishable items such as rice and pasta; canned vegetables and fruit; canned tuna or chicken; canned or dried beans; peanut butter; and breakfast cereal.  In addition, a limited amount of feminine hygiene, toilet paper, and other non-food essentials may also be requested and are included if supplies are available.</p>
+            <p>Please also be aware that you must submit a request for each week you want a delivery.</p>
+            <p>For more information about Here2Help, please visit <a href="http://www.Here2HelpMC.com">www.Here2HelpMC.com</a>.</p>
+            <p>Thank you!</p>
+
+            <p class="card-text text-center">
+                <a href="{% url 'orders:start' %}">
+                    <button type="button" class="btn btn-primary btn-lg m-5" style="font-size: 3rem;">Make a Request!</button>
+                </a>
+            </p>
+            <!-- <iframe src="https://www.google.com/maps/d/embed?mid=1q6xRmhM0jnLxZDcZk-EmkFI2ZdJCpImb" width="100%" height="480"></iframe> -->
+        </div>
+    </div>
+
+
+{% endblock content %}
+
