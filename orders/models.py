@@ -72,6 +72,7 @@ class Supporter(BaseModel):
 
     class Meta:
         unique_together = ['first_name', 'last_name', 'email', ]
+        ordering = ['last_name', 'first_name', ]
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
