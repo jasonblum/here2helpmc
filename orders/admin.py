@@ -83,6 +83,7 @@ class OrderAdmin(admin.ModelAdmin):
 	search_fields = ['customer__address__raw', ]
 	list_display = ('status', 'customer', 'customer_zip', 'dt_created', 'dt_ready', 'dt_requested_delivery', 'driver', 'dt_delivered', 'dt_cancelled', )
 	list_filter = ('status', 'driver', 'customer_zip', DTRequestedDeliveryFilter, )
+	readonly_fields = ('status', )
 	actions = (assign_these_orders_to_a_driver, do_something_with_these_orders, do_something_else_with_these_orders, )
 
 	def has_add_permission(self, request, obj=None):

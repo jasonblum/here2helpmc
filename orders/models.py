@@ -152,6 +152,10 @@ class Order(BaseModel):
         if not self.dt_requested_delivery:
             raise Exception('Order must have a dt_requested_delivery.')
 
+        if self.driver and not self.driver.is_driver:
+            #I think this is covered by limit_choices_to, but just in case.
+            raise Exception('Driver must have is_driver set to True')
+
         if self.dt_cancelled:
             self.status = 'cancelled'
         if self.dt_delivered:
