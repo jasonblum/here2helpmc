@@ -50,3 +50,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_absolute_url(self):
         return "/users/%i/" % (self.pk)
+
+    @property
+    def member_of_groups(self):
+      return ', '.join([group.name for group in self.groups.all()])

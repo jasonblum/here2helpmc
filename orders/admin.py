@@ -43,7 +43,6 @@ def set_status_to_created(modeladmin, request, queryset):
 	return redirect('admin:orders_order_changelist')
 
 
-
 def assign_these_orders_to_a_driver(modeladmin, request, queryset):
 	selected_order_ids = [o.id for o in queryset]
 	drivers = Supporter.objects.filter(is_driver=True)
@@ -124,7 +123,7 @@ class OrderAdmin(admin.ModelAdmin):
 	search_fields = ['customer__address__raw', ]
 	list_display = ('status', 'customer', 'customer_zip', 'dt_created', 'dt_ready', 'dt_requested_delivery', 'driver', 'dt_delivered', 'dt_cancelled', )
 	list_filter = ('status', 'driver', 'customer_zip', DTRequestedDeliveryFilter, )
-	readonly_fields = ('status', )
+	readonly_fields = ('status', 'customer_details')
 	actions = (assign_these_orders_to_a_driver, get_email_to_send_driver, set_status_to_created, do_something_with_these_orders, do_something_else_with_these_orders, )
 
 	def has_add_permission(self, request, obj=None):

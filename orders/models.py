@@ -181,6 +181,19 @@ class Order(BaseModel):
     def zip(self):
         return self.customer.address.as_dict()['postal_code']
 
+    @property
+    def customer_details(self):
+        return mark_safe(f'''<li>Address: {self.customer.address}</li>
+<li>Phone: {self.customer.phone} (Can receive texts? {self.customer.phone_can_receive_texts})</li>
+<li>Secondary Phone: {self.customer.phone} (Can receive texts? {self.customer.secondary_phone_can_receive_texts})</li>
+<li>Email: {self.customer.email}</li>
+<li>Secondary Email: {self.customer.secondary_email}</li>
+<li>Apartment: {self.customer.apartment_number}</li>
+<li>Preferred Language: {self.customer.get_preferred_language_display()}</li>
+<li>Special Requests: {self.customer.special_requests}</li>
+<li>Dietary Restrictions: {self.customer.dietary_restrictions}</li>
+<li>Comments: {self.customer.comments}</li>''')
+
     class Meta:
         ordering = ['-dt_created']
 
