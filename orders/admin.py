@@ -144,19 +144,19 @@ class CustomerAdmin(admin.ModelAdmin):
 		return False
 
 
-class FilterByDriversZipCode(admin.SimpleListFilter):
-	title = 'Driver\'s Zip Code (if driver)'
-	parameter_name = 'zip' # you can put anything here
+# class FilterByDriversZipCode(admin.SimpleListFilter):
+# 	title = 'Driver\'s Zip Code (if driver)'
+# 	parameter_name = 'zip' # you can put anything here
 
-	def lookups(self, request, model_admin):
-		zips = list((z, z) for z in Supporter.objects.filter(is_driver=True).values_list('address__locality__postal_code', flat=True).distinct())
-		return zips
+# 	def lookups(self, request, model_admin):
+# 		zips = list((z, z) for z in Supporter.objects.filter(is_driver=True).values_list('address__locality__postal_code', flat=True).distinct())
+# 		return zips
 
-	def queryset(self, request, queryset):
-		if self.value():
-			return queryset.distinct().filter(is_driver=True, address__locality__postal_code=self.value())
-		else:
-			return queryset
+# 	def queryset(self, request, queryset):
+# 		if self.value():
+# 			return queryset.distinct().filter(is_driver=True, address__locality__postal_code=self.value())
+# 		else:
+# 			return queryset
 		
 		
 
@@ -165,7 +165,7 @@ class FilterByDriversZipCode(admin.SimpleListFilter):
 class SupporterAdmin(admin.ModelAdmin):
 	list_display = ('first_name', 'last_name', 'email', 'phone', 'address', 'closest_dropoff_location', 'is_driver', )
 	search_fields = ['first_name', 'last_name', 'email', 'phone', 'address__raw', ]
-	list_filter = ('is_driver', 'address__locality__postal_code', 'closest_dropoff_location', FilterByDriversZipCode, )
+	list_filter = ('is_driver', 'closest_dropoff_location', )
 
 
 @admin.register(DropoffLocation)
