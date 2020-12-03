@@ -165,7 +165,7 @@ class CustomerAdmin(admin.ModelAdmin):
 class SupporterAdmin(admin.ModelAdmin):
 	list_display = ('first_name', 'last_name', 'email', 'phone', 'address', 'closest_dropoff_location', 'is_driver', )
 	search_fields = ['first_name', 'last_name', 'email', 'phone', 'address__raw', ]
-	list_filter = ('is_driver', 'closest_dropoff_location', )
+	list_filter = ('is_driver', )
 
 
 @admin.register(DropoffLocation)
