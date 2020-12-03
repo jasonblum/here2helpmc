@@ -215,13 +215,3 @@ class Donation(BaseModel):
 
     class Meta:
         ordering = ['-amount']
-
-
-
-class Document(BaseModel):
-    title = models.CharField(max_length=254)
-    body = RichTextField()
-
-    def __str__(self):
-        return self.title
-

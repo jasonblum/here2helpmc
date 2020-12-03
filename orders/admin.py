@@ -3,13 +3,14 @@ from django.contrib import admin, messages
 from django.forms import TextInput, Textarea, EmailInput
 from django.db import models
 from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from address.models import AddressField
 from address.forms import AddressWidget
 
-from .models import Order, Customer, School, Supporter, Donation, Document, DropoffLocation
+from .models import Order, Customer, School, Supporter, Donation, DropoffLocation
 
 
 
@@ -29,14 +30,54 @@ def do_something_else_with_these_orders(modeladmin, request, queryset):
 	})	
 
 
+def set_status_to_created(modeladmin, request, queryset):
+	selected_order_ids = [o.id for o in queryset]
+	orders = Order.objects.filter(pk__in=selected_order_ids)
+	for order in orders:
+		order.dt_cancelled = None
+		order.dt_delivered = None
+		order.dt_ready = None
+		order.driver = None
+		order.save()
+	messages.success(request, f'{len(orders)} orders\' statuses reset to created.')
+	return redirect('admin:orders_order_changelist')
+
+
+
 def assign_these_orders_to_a_driver(modeladmin, request, queryset):
 	selected_order_ids = [o.id for o in queryset]
 	drivers = Supporter.objects.filter(is_driver=True)
-
-	orders = Order.objects.filter(pk__in=selected_order_ids)
+	orders = Order.objects.filter(pk__in=selected_order_ids, status='created')
 	return render(request, 'orders/assign_orders_to_drivers.html', {
 		'orders':orders,
 		'drivers': drivers,
+	})	
+
+def get_email_to_send_driver(modeladmin, request, queryset):
+	selected_order_ids = [o.id for o in queryset]
+	orders = Order.objects.filter(pk__in=selected_order_ids, status='processed')
+
+	if not orders:
+		messages.error(request, f'You didn\'t select any orders with a status of \'processed\'.')
+		return redirect('admin:orders_order_changelist')
+
+	if orders.order_by().values('driver').distinct().count() != 1:
+		messages.error(request, f'You selected orders with more than one driver.')
+		return redirect('admin:orders_order_changelist')
+
+	driver = orders[0].driver #they must all have the same driver at this point.
+
+	email = render_to_string('emails/email_to_driver.html', {'driver': driver, 'orders':orders})
+
+	return render(request, 'orders/email_to_driver.html', {'driver':driver, 'orders':orders, 'email':email})
+
+		
+
+
+
+	return render(request, 'orders/assign_orders_to_drivers.html', {
+		'orders':orders,
+		'email':email
 	})	
 
 
@@ -84,7 +125,7 @@ class OrderAdmin(admin.ModelAdmin):
 	list_display = ('status', 'customer', 'customer_zip', 'dt_created', 'dt_ready', 'dt_requested_delivery', 'driver', 'dt_delivered', 'dt_cancelled', )
 	list_filter = ('status', 'driver', 'customer_zip', DTRequestedDeliveryFilter, )
 	readonly_fields = ('status', )
-	actions = (assign_these_orders_to_a_driver, do_something_with_these_orders, do_something_else_with_these_orders, )
+	actions = (assign_these_orders_to_a_driver, get_email_to_send_driver, set_status_to_created, do_something_with_these_orders, do_something_else_with_these_orders, )
 
 	def has_add_permission(self, request, obj=None):
 		return False
@@ -143,10 +184,3 @@ class DonationAdmin(admin.ModelAdmin):
 	search_fields = ('supporter', )
 	list_filter = ('method', )
 	list_display = ('__str__', 'dt_created', 'date_received', 'date_thanked', 'thanked_by', 'ok_to_publicly_recognize', )	
-
-
-@admin.register(Document)
-class DocumentAdmin(admin.ModelAdmin):
-	list_display = ('__str__', )	
-
-

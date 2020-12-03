@@ -117,6 +117,7 @@ def customer(request, customer_id=None, event=''):
 	customer = get_object_or_404(Customer, pk=customer_id)
 	return render(request, 'orders/customer.html', {'customer':customer, 'event':event})	
 
+
 def get_stats():
 	stats = {
 		'orders_created': Order.objects.filter(status='created').count(),
@@ -131,10 +132,37 @@ def get_stats():
 	}
 	return stats
 
-['a', 'First Name', 'Last Name', 'Cell Phone Number ', 'Email', 'Which donation site is closest to you?', 'Are you willing to deliver out of cluster (Rockville, Wheaton, Derwood, Gaithersburg, etc)?', "In order to maintain both the recipient and the volunteer's safety, we ask that volunteers wear gloves and a mask when delivering and that they DO NOT interact with the recipient face to face. Do you agree to follow these instructions? ", 'If you are a student, will your parent be with you in the car? All students MUST have a parent/adult in the car with them. ', 'Please donate to Here2Help using this link https://www.here2helpmc.com/help-out']
+
+
+##admin functions
+def assign_driver(request):
+	order_pks = request.POST.getlist('orders')
+	driver_pk = request.POST.get('driver', 0)
+
+	driver = get_object_or_404(Supporter, pk=driver_pk)
+
+	if not order_pks:
+		messages.warning(request, f'Hm. You didn\t select any orders to assign to {driver}.  Try again?')
+		return redirect('admin:orders_order_changelist')
+
+	orders = []
+	for pk in order_pks:
+		order = Order.objects.get(pk=pk, status='created')
+		order.driver = driver
+		order.save()
+		orders.append(order)
+
+	messages.success(request, f'{len(orders)} orders assigned to {driver}')
+	return redirect('admin:orders_order_changelist')
+
+
+
+
+
 
 
 def import_supporters():
+	raise
 	with open(os.path.join(settings.BASE_DIR, 'docs/Here2Help Volunteers (Responses) - Form Responses 1.csv'), 'r') as data:
 		reader = DictReader(data)
 
@@ -150,7 +178,6 @@ def import_supporters():
 			which=row['which'].strip()
 			is_driver=row['willing'].strip()
 
-
 			if which:
 				dropoff_location, created = DropoffLocation.objects.get_or_create(name=which)
 
@@ -162,8 +189,5 @@ def import_supporters():
 				phone=phone if raw_phone else None,
 				closest_dropoff_location=dropoff_location if which else None
 			)
-
 			print(supporter)
-
-
 	print('\n\n\nDONE!')

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load i18n static sekizai_tags %}
+
+
+{% block content %} 
+
+<div class="card">
+    <div class="card-header">
+        <span class="display-5">Email Driver</span>
+        <span class="display-5 float-right">
+            <a href="{% url 'admin:orders_order_changelist' %}?driver__id__exact={{ driver.pk }}">Back to orders</a>
+        </span>
+        
+    </div>
+    <div class="card-body">
+        <p class="card-text">
+            You assigned these orders to the driver {{ driver }}:
+            <ul>
+                {% for order in orders %}
+                    <li>{{ order }}
+                        <ul>
+                            <li>Customer address: {{ order.customer.address }}</li>
+                            <li>Customer email: {{ order.customer.email }}</li>
+                            <li>Order status: {{ order.status }}</li>
+                            <li>Order ID: {{ order.id }}</li>
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+            Copy and paste the email to {{ driver }} below:
+        </p>
+    </div>
+    <div class="card-footer">
+        <div class="form-group">
+            <div class="card">
+                <div class="card-body">
+                  {{ email }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock content %}
+
+

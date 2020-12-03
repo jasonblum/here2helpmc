@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags i18n static sekizai_tags %}
+{% load i18n static sekizai_tags %}
 
 
 {% block content %} 
 
+<form action="{% url 'orders:assign_driver' %}" method="POST">
+    {% csrf_token %}    
 
 
     <div class="card">
@@ -39,7 +41,7 @@
                     <div class="form-group col-md-1"></div>
                     <div class="form-group col-md-6">
                         {% for order in orders %}
-                            <input class="form-check-input" name="orders" type="checkbox" id="order{{ order.pk }}">
+                            <input class="form-check-input" name="orders" type="checkbox" value="{{ order.pk }}">
                             <label class="form-check-label" for="order{{ order.pk }}">{{ order }}</label>
                         {% endfor %}
                     </div>
@@ -52,22 +54,13 @@
         </div>
         <div class="card-footer">
             <p class="card-text text-center">
-                <button type="button" id="assign_orders" class="btn btn-primary btn-lg">Assign these orders to this driver and set their status to "processed and assigned"!</button>
+                <button type="submit" id="assign_orders" class="btn btn-primary btn-lg">Assign selected orders to this driver and set their status to "processed and assigned"!</button>
             </p>
         </div>
     </div>
 
 
-
-{% addtoblock "js" %}
-<script type="text/javascript">
-    $(document).ready(function() {
-        $('#ready_orders').click(function(){
-            alert('This button doesnt do anything yet, but I would suggest that it assigns the selected orders above to the selected driver, and updates their statuses to "processed"...\n\nthe user is then redirected back to the orders page.');
-        })
-    });
-</script>
-{% endaddtoblock %}
+</form>
 
 
 {% endblock content %}
