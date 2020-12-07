@@ -10,8 +10,7 @@ from django.utils.safestring import mark_safe
 from address.models import AddressField
 from address.forms import AddressWidget
 
-from .models import Order, Customer, School, Supporter, Donation, DropoffLocation
-
+from .models import Order, Customer, School, Supporter, Donation, DropoffLocation, DeliveryDay
 
 
 def do_something_with_these_orders(modeladmin, request, queryset):
@@ -74,10 +73,10 @@ def get_email_to_send_driver(modeladmin, request, queryset):
 
 
 
-	return render(request, 'orders/assign_orders_to_drivers.html', {
-		'orders':orders,
-		'email':email
-	})	
+	# return render(request, 'orders/assign_orders_to_drivers.html', {
+	# 	'orders':orders,
+	# 	'email':email
+	# })	
 
 
 class DTRequestedDeliveryFilter(admin.SimpleListFilter):
@@ -87,7 +86,8 @@ class DTRequestedDeliveryFilter(admin.SimpleListFilter):
 	def lookups(self, request, model_admin):
 		start = pendulum.now().subtract(weeks=1)
 		end = pendulum.now().add(weeks=100)
-		dates = Order.objects.filter(dt_requested_delivery__range=(start, end)).values_list('dt_requested_delivery', flat=True)
+		#dates = Order.objects.filter(dt_requested_delivery__range=(start, end)).values_list('dt_requested_delivery', flat=True)
+		dates = []
 		dates = list(set(dates))
 		dates_to_return = []
 		for date in dates:
@@ -121,7 +121,7 @@ class DTRequestedDeliveryFilter(admin.SimpleListFilter):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
 	search_fields = ['customer__address__raw', ]
-	list_display = ('status', 'customer', 'customer_zip', 'dt_created', 'dt_ready', 'dt_requested_delivery', 'driver', 'dt_delivered', 'dt_cancelled', )
+	list_display = ('status', 'customer', 'customer_zip', 'dt_created', 'dt_ready', 'driver', 'deliveryday', 'dt_delivered', 'dt_cancelled', )
 	list_filter = ('status', 'driver', 'customer_zip', DTRequestedDeliveryFilter, )
 	readonly_fields = ('status', 'customer_details')
 	actions = (assign_these_orders_to_a_driver, get_email_to_send_driver, set_status_to_created, do_something_with_these_orders, do_something_else_with_these_orders, )
@@ -183,3 +183,13 @@ class DonationAdmin(admin.ModelAdmin):
 	search_fields = ('supporter', )
 	list_filter = ('method', )
 	list_display = ('__str__', 'dt_created', 'date_received', 'date_thanked', 'thanked_by', 'ok_to_publicly_recognize', )	
+
+
+@admin.register(DeliveryDay)
+class DeliveryDayAdmin(admin.ModelAdmin):
+	list_display = ('__str__', 'day_of_week_as_string', 'day_of_week', 'week', 'is_future', )
+	
+	def is_future(self, obj):
+		return obj.date.is_future()
+	is_future.boolean=True
+

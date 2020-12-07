@@ -1,3 +1,4 @@
+from datetime import datetime
 import pendulum
 import uuid
 from django.conf import settings
@@ -25,6 +26,34 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class DeliveryDay(BaseModel):
+    _date = models.DateField(unique=True)
+    notes = models.TextField(null=True, blank=True)
+
+    @property
+    def date(self):
+        return pendulum.parse(str(self._date), tz=settings.TIME_ZONE)
+
+    @property
+    def day_of_week(self):
+        return self.date.day_of_week
+
+    @property
+    def day_of_week_as_string(self):
+        return self.date.format('dddd')
+
+    @property
+    def week(self):
+        return self.date.week_of_year
+
+    def __str__(self):
+        return str(self.date)
+
+    class Meta:
+        ordering = ['_date', ]
+
 
 
 SCHOOL_TYPE_CHOICES = (
@@ -143,7 +172,7 @@ class Order(BaseModel):
     driver = models.ForeignKey(Supporter, blank=True, null=True, on_delete=models.PROTECT, related_name='orders', limit_choices_to={'is_driver': True})
 
     dt_ready = models.DateTimeField(verbose_name=_('Datetime ready'), blank=True, null=True)
-    dt_requested_delivery = models.DateField(verbose_name=_('Date requested for delivery.'), blank=True, null=True)
+    deliveryday = models.ForeignKey(DeliveryDay, on_delete=models.PROTECT, related_name='orders')
     dt_delivered = models.DateTimeField(verbose_name=_('Datetime delivered'), blank=True, null=True)
     dt_cancelled = models.DateTimeField(verbose_name=_('Datetime cancelled'), blank=True, null=True)
 

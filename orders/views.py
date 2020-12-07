@@ -9,44 +9,19 @@ from stronghold.decorators import public
 
 from address.models import Address, Locality
 
-from shared.models import ExtraDelivery, CancelledDelivery
 from shared.utilities import get_object_or_None
 
-from .models import Order, Customer, School, Supporter, DropoffLocation
+from .models import Order, Customer, School, Supporter, DropoffLocation, DeliveryDay
 from .forms import StartForm, CustomerForm
-
-
-
-
-
-# def new_get_available_dates(customer=None):
-# 	delivery_days = ['WEDNESDAY', 'SUNDAY', ]
-# 	how_many_weeks_ahead = 3
-
-# 	start = pendulum.now().start_of('week').subtract(days=1) #Weeks are Sunday-Saturday
-# 	end = start.add(weeks=how_many_weeks_ahead)
-# 	period = pendulum.period(start, end)
-
-# 	extra_deliveries = ExtraDelivery.objects.filter(date__range=(start, end)).values_list('date')
-# 	cancelled_deliveries = CancelledDelivery.objects.filter(date__range=(start, end)).values_list('date')
-
-# 	available_days = [pendulum.datetime(d[0].year, d[0].month, d[0].day, tz=settings.TIME_ZONE) for d in extra_deliveries]
-
-# 	for day in period.range('days'):
-# 		for delivery_day in delivery_days:
-# 			if day.day_of_week == getattr(pendulum, delivery_day):
-# 				available_days.append(day)
-
-# 	cancelled_days = [pendulum.datetime(d[0].year, d[0].month, d[0].day, tz=settings.TIME_ZONE) for d in cancelled_deliveries]
-
-# 	final_days = sorted([d for d in available_days if d not in cancelled_days])
-
-
 
 
 
 def get_available_dates(customer):
 	this_sunday = pendulum.now().start_of('week').subtract(days=1) #Weeks are Sunday-Saturday
+
+	potential_dates = DeliveryDay.objects.filter(_date__gt=this_sunday)[:5]
+	print('potential_dates: ', potential_dates)
+
 
 	this_wednesday = this_sunday.next(pendulum.WEDNESDAY)
 	next_sunday = this_sunday.add(weeks=1)
@@ -72,6 +47,8 @@ def get_available_dates(customer):
 		if next_wednesday.subtract(days=1).set(hour=12).is_future():
 			WEEK.append(next_wednesday)
 		DATES.append(WEEK)
+
+	print(DATES)
 
 	return DATES
 
