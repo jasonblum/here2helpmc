@@ -1,5 +1,6 @@
 import pendulum
 from django.contrib import admin, messages
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.forms import TextInput, Textarea, EmailInput
 from django.db import models
 from django.shortcuts import render, redirect
@@ -121,13 +122,17 @@ class DTRequestedDeliveryFilter(admin.SimpleListFilter):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
 	search_fields = ['customer__address__raw', ]
-	list_display = ('status', 'customer', 'customer_zip', 'dt_created', 'dt_ready', 'driver', 'deliveryday', 'dt_delivered', 'dt_cancelled', )
+	list_display = ('status', 'requires_admin_attention_flag', 'customer', 'customer_zip', 'dt_created', 'dt_ready', 'driver', 'deliveryday', 'dt_delivered', 'dt_cancelled', )
 	list_filter = ('status', 'driver', 'customer_zip', DTRequestedDeliveryFilter, )
 	readonly_fields = ('status', 'customer_details')
 	actions = (assign_these_orders_to_a_driver, get_email_to_send_driver, set_status_to_created, do_something_with_these_orders, do_something_else_with_these_orders, )
 
 	def has_add_permission(self, request, obj=None):
 		return False
+
+	def requires_admin_attention_flag(self, obj):
+		return mark_safe('<img src="{}" alt="True">'.format(staticfiles_storage.url('/admin/img/icon-alert.svg'))) if obj.requires_admin_attention else ''
+
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):

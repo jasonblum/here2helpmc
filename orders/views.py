@@ -66,6 +66,16 @@ def order(request, customer_id=None):
 		deliveryday = get_object_or_404(DeliveryDay, pk=request.POST['deliveryday'])
 		customer = customer_form.save()
 		order = Order.objects.create(customer=customer, deliveryday=deliveryday)
+
+		if Customer.objects.filter(address=customer.address).count() > 1:
+			order.notes += '\nRequires Admin Attention: More than one customer is using this address.'
+			order.requires_admin_attention = True
+			order.save()
+		if customer.email and Customer.objects.filter(email=customer.email).count() > 1:
+			order.notes += '\nRequires Admin Attention: More than one customer is using this email.'
+			order.requires_admin_attention = True
+			order.save()
+
 		return redirect('orders:customer_event', customer_id=customer.pk, event='order-just-placed')
 
 	print(customer_form.errors)

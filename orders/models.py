@@ -185,7 +185,8 @@ class Order(BaseModel):
     dt_delivered = models.DateTimeField(verbose_name=_('Datetime delivered'), blank=True, null=True)
     dt_cancelled = models.DateTimeField(verbose_name=_('Datetime cancelled'), blank=True, null=True)
 
-    notes = models.TextField(verbose_name=_('Notes'), null=True, blank=True)
+    notes = models.TextField(verbose_name=_('Notes'), default='')
+    requires_admin_attention = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs): 
 
