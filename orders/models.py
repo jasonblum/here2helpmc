@@ -138,7 +138,7 @@ class Customer(BaseModel):
     notes = models.TextField(verbose_name=_('Notes'), null=True, blank=True)
 
     def __str__(self):
-        return f'Customer with passphrase "{self.passphrase}" at {self.address}'
+        return f'Customer ("{self.passphrase}") at {self.address.street_number} {self.address.route} {self.address.locality.postal_code}'
 
     class Meta:
         ordering = ['-dt_created']

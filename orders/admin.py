@@ -3,7 +3,7 @@ from django.contrib import admin, messages
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.forms import TextInput, Textarea, EmailInput
 from django.db import models
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, reverse
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -122,7 +122,7 @@ class DTRequestedDeliveryFilter(admin.SimpleListFilter):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
 	search_fields = ['customer__address__raw', ]
-	list_display = ('status', 'requires_admin_attention_flag', 'customer', 'customer_zip', 'dt_created', 'dt_ready', 'driver', 'deliveryday', 'dt_delivered', 'dt_cancelled', )
+	list_display = ('status', 'requires_admin_attention_flag', 'customer_link', 'customer_zip', 'dt_created', 'dt_ready', 'driver', 'deliveryday', 'dt_delivered', 'dt_cancelled', )
 	list_filter = ('status', 'driver', 'customer_zip', DTRequestedDeliveryFilter, )
 	readonly_fields = ('status', 'customer_details')
 	actions = (assign_these_orders_to_a_driver, get_email_to_send_driver, set_status_to_created, do_something_with_these_orders, do_something_else_with_these_orders, )
@@ -132,6 +132,13 @@ class OrderAdmin(admin.ModelAdmin):
 
 	def requires_admin_attention_flag(self, obj):
 		return mark_safe('<img src="{}" alt="True">'.format(staticfiles_storage.url('/admin/img/icon-alert.svg'))) if obj.requires_admin_attention else ''
+	requires_admin_attention_flag.short_description='Attention!'
+
+	def customer_link(self, obj):
+		return mark_safe('<a href="{}">{}</a>'.format(reverse('admin:orders_customer_change', args=[obj.pk]), obj.customer))
+	requires_admin_attention_flag.short_description='Attention!'
+
+
 
 
 @admin.register(Customer)
