@@ -215,7 +215,7 @@ class DonationAdmin(admin.ModelAdmin):
 
 @admin.register(DeliveryDay)
 class DeliveryDayAdmin(admin.ModelAdmin):
-	list_display = ('__str__', 'number_of_orders', 'day_of_week_as_string', 'week_of_year', 'is_future', )
+	list_display = ('__str__', 'description', 'number_of_orders', 'day_of_week_as_string', 'week_of_year', 'is_future', )
 	
 	def is_future(self, obj):
 		return obj.date.is_future()
