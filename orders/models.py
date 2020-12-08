@@ -185,10 +185,21 @@ class Order(BaseModel):
     dt_delivered = models.DateTimeField(verbose_name=_('Datetime delivered'), blank=True, null=True)
     dt_cancelled = models.DateTimeField(verbose_name=_('Datetime cancelled'), blank=True, null=True)
 
-    notes = models.TextField(verbose_name=_('Notes'), default='')
+    notes = models.TextField(verbose_name=_('Notes'), default='Notes:')
     requires_admin_attention = models.BooleanField(default=False)
 
+    quick_note = models.CharField(verbose_name=_('Quick Note'), blank=True, null=True, max_length=255)
+    __original_quick_note = None
+
+    def __init__(self, *args, **kwargs):
+        #https://stackoverflow.com/a/1793323
+        super(Order, self).__init__(*args, **kwargs)
+        self.__original_quick_note = self.quick_note
+
     def save(self, *args, **kwargs): 
+
+        if self.quick_note and self.quick_note != self.__original_quick_note:
+            self.notes += f'\nQuick note ({pendulum.now()}): ' + self.quick_note
 
         if self.driver and not self.driver.is_driver:
             #I think this is covered by limit_choices_to, but just in case.

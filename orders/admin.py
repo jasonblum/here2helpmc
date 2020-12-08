@@ -74,11 +74,6 @@ def get_email_to_send_driver(modeladmin, request, queryset):
 
 
 
-	# return render(request, 'orders/assign_orders_to_drivers.html', {
-	# 	'orders':orders,
-	# 	'email':email
-	# })	
-
 
 class DTRequestedDeliveryFilter(admin.SimpleListFilter):
 	title = 'Requested Delivery Date'
@@ -102,28 +97,39 @@ class DTRequestedDeliveryFilter(admin.SimpleListFilter):
 			return queryset
 		
 		
-# class OpenDeliveriesFilter(admin.SimpleListFilter):
-# 	title = 'Open Deliveries'
-# 	parameter_name = 'delivery_id' # you can put anything here
+class DriverFilter(admin.SimpleListFilter):
+	title = 'Driver'
+	parameter_name = 'driver__id__exact'
 
-# 	def lookups(self, request, model_admin):
-# 		deliveries = []
-# 		for delivery in Delivery.objects.filter(is_closed=False):
-# 			deliveries.append((delivery.pk, delivery))
-# 		return deliveries
+	def lookups(self, request, model_admin):
+		supporter_drivers = Supporter.objects.filter(is_driver=True, orders__isnull=False)
+		drivers = []
+		for sd in supporter_drivers:
+			drivers.append( (sd.pk, sd) )
+		return drivers
 
-# 	def queryset(self, request, queryset):
-# 		if self.value():
-# 			return queryset.distinct().filter(delivery=self.value())
-# 		else:
-# 			return queryset
+	def queryset(self, request, queryset):
+		if self.value():
+			return queryset.distinct().filter(driver=self.value())
+		else:
+			return queryset
+		
+		
 		
 		
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-	search_fields = ['customer__address__raw', ]
-	list_display = ('status', 'requires_admin_attention_flag', 'customer_link', 'customer_zip', 'dt_created', 'dt_ready', 'driver', 'deliveryday', 'dt_delivered', 'dt_cancelled', )
-	list_filter = ('status', 'driver', 'customer_zip', DTRequestedDeliveryFilter, )
+	search_fields = [
+		'notes', 
+		'customer__address__raw', 
+		'customer__email', 
+		'customer__passphrase', 
+		'customer__comments', 
+		'customer__notes', 
+	]
+	list_display = ('status', 'requires_admin_attention_flag', 'customer_link', 'customer_zip', 'dt_created', 'dt_ready', 'driver', 'deliveryday', 'dt_delivered', 'dt_cancelled', 'quick_note', )
+	list_editable = ('quick_note', )
+	list_filter = ('status', DriverFilter, 'customer_zip', DTRequestedDeliveryFilter, )
 	readonly_fields = ('status', 'customer_details')
 	actions = (assign_these_orders_to_a_driver, get_email_to_send_driver, set_status_to_created, do_something_with_these_orders, do_something_else_with_these_orders, )
 
@@ -131,7 +137,7 @@ class OrderAdmin(admin.ModelAdmin):
 		return False
 
 	def requires_admin_attention_flag(self, obj):
-		return mark_safe('<img src="{}" alt="True">'.format(staticfiles_storage.url('/admin/img/icon-alert.svg'))) if obj.requires_admin_attention else ''
+		return mark_safe('<img src="{}" alt="Requires Admin attention...">'.format(staticfiles_storage.url('/admin/img/icon-alert.svg'))) if obj.requires_admin_attention else ''
 	requires_admin_attention_flag.short_description='Attention!'
 
 	def customer_link(self, obj):
