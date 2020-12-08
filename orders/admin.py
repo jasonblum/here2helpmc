@@ -30,6 +30,14 @@ def do_something_else_with_these_orders(modeladmin, request, queryset):
 	})	
 
 
+def list_addresses(modeladmin, request, queryset):
+	selected_order_ids = [o.id for o in queryset]
+	orders = Order.objects.filter(pk__in=selected_order_ids)
+	return render(request, 'orders/list_addresses.html', {
+		'orders':orders,
+	})	
+
+
 def set_status_to_created(modeladmin, request, queryset):
 	selected_order_ids = [o.id for o in queryset]
 	orders = Order.objects.filter(pk__in=selected_order_ids)
@@ -75,27 +83,6 @@ def get_email_to_send_driver(modeladmin, request, queryset):
 
 
 
-class DTRequestedDeliveryFilter(admin.SimpleListFilter):
-	title = 'Requested Delivery Date'
-	parameter_name = 'dt_requested_delivery' # you can put anything here
-
-	def lookups(self, request, model_admin):
-		start = pendulum.now().subtract(weeks=1)
-		end = pendulum.now().add(weeks=100)
-		#dates = Order.objects.filter(dt_requested_delivery__range=(start, end)).values_list('dt_requested_delivery', flat=True)
-		dates = []
-		dates = list(set(dates))
-		dates_to_return = []
-		for date in dates:
-			dates_to_return.append((date, date.strftime('%A %B %d, %Y')))
-		return sorted(dates_to_return)
-
-	def queryset(self, request, queryset):
-		if self.value():
-			return queryset.distinct().filter(dt_requested_delivery=self.value())
-		else:
-			return queryset
-		
 		
 class DriverFilter(admin.SimpleListFilter):
 	title = 'Driver'
@@ -117,6 +104,29 @@ class DriverFilter(admin.SimpleListFilter):
 		
 		
 		
+class DeliveryDayFilter(admin.SimpleListFilter):
+	title = 'Delivery Day'
+	parameter_name = 'deliveryday__id__exact'
+
+	def lookups(self, request, model_admin):
+		this_week_start = pendulum.now().start_of('week').subtract(days=1).subtract(weeks=1)
+
+		deliverydays = DeliveryDay.objects.filter(_date__gte=this_week_start).order_by('_date')[:10]
+
+		days = []
+		for deliveryday in deliverydays:
+			days.append( (deliveryday.pk, deliveryday) )
+		return days
+
+	def queryset(self, request, queryset):
+		if self.value():
+			return queryset.distinct().filter(deliveryday=self.value())
+		else:
+			return queryset
+		
+		
+		
+		
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
 	search_fields = [
@@ -129,9 +139,9 @@ class OrderAdmin(admin.ModelAdmin):
 	]
 	list_display = ('status', 'requires_admin_attention_flag', 'customer_link', 'customer_zip', 'dt_created', 'dt_ready', 'driver', 'deliveryday', 'dt_delivered', 'dt_cancelled', 'quick_note', )
 	list_editable = ('quick_note', )
-	list_filter = ('status', DriverFilter, 'customer_zip', DTRequestedDeliveryFilter, )
+	list_filter = (DeliveryDayFilter, 'status', DriverFilter, 'customer_zip', )
 	readonly_fields = ('status', 'customer_details')
-	actions = (assign_these_orders_to_a_driver, get_email_to_send_driver, set_status_to_created, do_something_with_these_orders, do_something_else_with_these_orders, )
+	actions = (list_addresses, assign_these_orders_to_a_driver, get_email_to_send_driver, set_status_to_created, do_something_with_these_orders, do_something_else_with_these_orders, )
 
 	def has_add_permission(self, request, obj=None):
 		return False

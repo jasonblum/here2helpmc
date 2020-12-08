@@ -58,7 +58,7 @@ class DeliveryDay(BaseModel):
         return self.orders.count()
 
     def __str__(self):
-        return str(self.date.format('dddd MMM D, YYYY'))
+        return str(self.date.format('dddd MMMM D, YYYY'))
 
     class Meta:
         ordering = ['_date', ]

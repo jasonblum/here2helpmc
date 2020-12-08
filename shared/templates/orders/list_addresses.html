@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load i18n static sekizai_tags %}
+
+
+{% block content %} 
+
+    <div class="card">
+        <div class="card-header">
+            <span class="display-5">List {{ orders.count }} addresses to paste into Circuit</span>
+            <span class="display-5 float-right">
+                <a href="{% url 'admin:orders_order_changelist' %}">Back to orders</a>
+            </span>
+        </div>
+        <div class="card-body">
+
+            <div class="form-row">
+                <div class="form-group col-md-12">
+                    <textarea class="form-control" rows="8" width="80%">{% for order in orders %}{{ order.customer.address }}
+{% endfor %}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+
