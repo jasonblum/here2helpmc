@@ -35,7 +35,7 @@
                 $('#id_secondary_phone').mask('(000) 000-0000');
                 
                 {% for key, value in deliverydays.items %}
-                    var $optgroup = $("<optgroup label='>'>");
+                    var $optgroup = $("<optgroup label='&nbsp;'>");
                     {% for deliveryday in value %}
                         $optgroup.append(new Option( '{{ deliveryday.date|friendly_date }}', '{{ deliveryday.pk }}'));
                     {% endfor %}

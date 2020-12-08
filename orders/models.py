@@ -30,7 +30,7 @@ class BaseModel(models.Model):
 
 class DeliveryDay(BaseModel):
     _date = models.DateField(unique=True)
-    _week_of_year = models.PositiveSmallIntegerField()
+    _week_of_year = models.PositiveSmallIntegerField(blank=True)
     notes = models.TextField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
