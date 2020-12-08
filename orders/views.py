@@ -1,4 +1,5 @@
 import pendulum, os
+from collections import defaultdict
 from csv import DictReader
 
 from django.conf import settings
@@ -16,41 +17,21 @@ from .forms import StartForm, CustomerForm
 
 
 
-def get_available_dates(customer):
-	this_sunday = pendulum.now().start_of('week').subtract(days=1) #Weeks are Sunday-Saturday
+def get_deliverydays(customer):
+	this_week_start = pendulum.now().start_of('week').subtract(days=1) #Weeks are Sunday-Saturday
 
-	potential_dates = DeliveryDay.objects.filter(_date__gt=this_sunday)[:5]
-	print('potential_dates: ', potential_dates)
+	potential_deliverydays = DeliveryDay.objects.filter(_date__gte=this_week_start).order_by('_date')[:10]
 
-
-	this_wednesday = this_sunday.next(pendulum.WEDNESDAY)
-	next_sunday = this_sunday.add(weeks=1)
-	next_wednesday = this_wednesday.add(weeks=1)
+	deliverydays = defaultdict(list)
 	
-	DATES = []
+	for deliveryday in potential_deliverydays:
 
-	if not customer or not customer.this_weeks_orders:
-		WEEK = [] 
-		WEEK.append(_('This Week:'))
-		#If now() is before noon the day before this Wednesday:
-		if this_sunday.subtract(days=1).set(hour=12).is_future():
-			WEEK.append(this_sunday)
-		if this_wednesday.subtract(days=1).set(hour=12).is_future():
-			WEEK.append(this_wednesday)
-		DATES.append(WEEK)
+		if deliveryday.date.subtract(days=1).set(hour=12).is_future()\
+			and not DeliveryDay.objects.filter(orders__customer=customer, orders__deliveryday___week_of_year=deliveryday.week_of_year).exists():
 
-	if not customer or not customer.next_weeks_orders:
-		WEEK = [] 
-		WEEK.append(_('Next Week:'))
-		if next_sunday.subtract(days=1).set(hour=12).is_future():
-			WEEK.append(next_sunday)
-		if next_wednesday.subtract(days=1).set(hour=12).is_future():
-			WEEK.append(next_wednesday)
-		DATES.append(WEEK)
+			deliverydays[deliveryday.week_of_year].append(deliveryday)
 
-	print(DATES)
-
-	return DATES
+	return dict(deliverydays) #Django templates can't do defaultdict apparently?
 
 
 
@@ -77,16 +58,19 @@ def order(request, customer_id=None):
 	customer = get_object_or_None(Customer, pk=customer_id)
 	customer_form = CustomerForm(request.POST or None, instance=customer)
 
-	if customer and not get_available_dates(customer):
+	if customer and not get_deliverydays(customer):
 		return redirect('orders:customer_event', customer_id=customer.pk, event='orders-already-filled')
 
 	# Manually set language to customer.preferred_language? (https://docs.djangoproject.com/en/3.1/topics/i18n/translation/#explicitly-setting-the-active-language)
 	if request.POST and customer_form.is_valid():
+		deliveryday = get_object_or_404(DeliveryDay, pk=request.POST['deliveryday'])
 		customer = customer_form.save()
-		order = Order.objects.create(customer=customer, dt_requested_delivery = pendulum.parse(request.POST['dt_requested_delivery'], tz=settings.TIME_ZONE))
+		order = Order.objects.create(customer=customer, deliveryday=deliveryday)
 		return redirect('orders:customer_event', customer_id=customer.pk, event='order-just-placed')
 
-	return render(request, 'orders/order.html', {'form':customer_form, 'available_dates': get_available_dates(customer)})	
+	print(customer_form.errors)
+
+	return render(request, 'orders/order.html', {'form':customer_form, 'deliverydays': get_deliverydays(customer)})	
 
 
 @public

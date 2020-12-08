@@ -10,7 +10,7 @@ from crispy_forms.bootstrap import PrependedText, PrependedAppendedText, FormAct
 
 from address.forms import AddressWidget, AddressField
 
-from .models import Customer
+from .models import Customer, DeliveryDay
 
 #Doing this: https://studygyaan.com/django/how-to-use-bootstrap-4-forms-with-django-crispy-forms
 
@@ -61,7 +61,7 @@ class CustomerForm(forms.ModelForm):
 			'comments', 
 		)
 
-	dt_requested_delivery = forms.CharField(widget=forms.Select, label=_('Desired delivery day'), help_text=_('Please request only one delivery per week (Sunday-Saturday).'))
+	deliveryday = forms.CharField(widget=forms.Select, label=_('Desired delivery day'), help_text=_('Please request only one delivery per week (Sunday-Saturday).'))
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -95,7 +95,7 @@ class CustomerForm(forms.ModelForm):
 			Div(
 				Div(
 					Field(
-						PrependedText('dt_requested_delivery',
+						PrependedText('deliveryday',
 							mark_safe('<i class="fas fa-clock"></i>'),
 							)
 						),

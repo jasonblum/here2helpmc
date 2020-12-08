@@ -18,7 +18,7 @@ from address.models import AddressField
 from shared.utilities import get_object_or_None
 
 class BaseModel(models.Model):
-    dt_created = models.DateTimeField(auto_now_add=True)
+    dt_created = models.DateTimeField(verbose_name=_('Datetime created'), auto_now_add=True)
     dt_updated = models.DateTimeField(verbose_name=_('Datetime updated'), auto_now=True)
 
     def delete(self):
@@ -30,7 +30,12 @@ class BaseModel(models.Model):
 
 class DeliveryDay(BaseModel):
     _date = models.DateField(unique=True)
+    _week_of_year = models.PositiveSmallIntegerField()
     notes = models.TextField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        self._week_of_year = self.date.add(days=1).week_of_year if not self.date.day_of_week else self.date.week_of_year
+        super(DeliveryDay, self).save(*args, **kwargs) 
 
     @property
     def date(self):
@@ -41,15 +46,19 @@ class DeliveryDay(BaseModel):
         return self.date.day_of_week
 
     @property
+    def week_of_year(self):
+        return self._week_of_year
+
+    @property
     def day_of_week_as_string(self):
         return self.date.format('dddd')
 
     @property
-    def week(self):
-        return self.date.week_of_year
+    def number_of_orders(self):
+        return self.orders.count()
 
     def __str__(self):
-        return str(self.date)
+        return str(self.date.format('dddd MMM D, YYYY'))
 
     class Meta:
         ordering = ['_date', ]
@@ -179,8 +188,6 @@ class Order(BaseModel):
     notes = models.TextField(verbose_name=_('Notes'), null=True, blank=True)
 
     def save(self, *args, **kwargs): 
-        if not self.dt_requested_delivery:
-            raise Exception('Order must have a dt_requested_delivery.')
 
         if self.driver and not self.driver.is_driver:
             #I think this is covered by limit_choices_to, but just in case.

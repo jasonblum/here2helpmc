@@ -33,16 +33,13 @@
                 $('#id_schools').select2();
                 $('#id_phone').mask('(000) 000-0000');
                 $('#id_secondary_phone').mask('(000) 000-0000');
-
-                {% for week in available_dates %}
-                    {% for day in week %}
-                        {% if forloop.first %}
-                            var $optgroup = $("<optgroup label='{{ day }}'>");
-                        {% else %}
-                            $optgroup.append(new Option( '{{ day|friendly_date }}', '{{ day.to_datetime_string }}'));
-                        {% endif %}
+                
+                {% for key, value in deliverydays.items %}
+                    var $optgroup = $("<optgroup label='>'>");
+                    {% for deliveryday in value %}
+                        $optgroup.append(new Option( '{{ deliveryday.date|friendly_date }}', '{{ deliveryday.pk }}'));
                     {% endfor %}
-                    $('#id_dt_requested_delivery').append($optgroup);
+                    $('#id_deliveryday').append($optgroup);
                 {% endfor %}
 
             });
