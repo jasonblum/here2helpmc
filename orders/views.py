@@ -4,6 +4,7 @@ from csv import DictReader
 
 from django.conf import settings
 from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from stronghold.decorators import public
@@ -71,10 +72,21 @@ def order(request, customer_id=None):
 			order.notes += '\nRequires Admin Attention: More than one customer is using this address.  (What additional information could you use here?)'
 			order.requires_admin_attention = True
 			order.save()
-		if customer.email and Customer.objects.filter(email=customer.email).count() > 1:
+			
+		if (customer.email and Customer.objects.filter(Q(email=customer.email)|Q(secondary_email=customer.email)).count() > 1) or \
+			(customer.secondary_email and Customer.objects.filter(Q(email=customer.secondary_email)|Q(secondary_email=customer.secondary_email)).count() > 1):
 			order.notes += '\nRequires Admin Attention: More than one customer is using this email.  (What additional information could you use here?)'
 			order.requires_admin_attention = True
 			order.save()
+
+		if (customer.phone and Customer.objects.filter(Q(phone=customer.phone)|Q(secondary_phone=customer.phone)).count() > 1) or \
+			(customer.secondary_phone and Customer.objects.filter(Q(phone=customer.secondary_phone)|Q(secondary_phone=customer.secondary_phone)).count() > 1):
+			order.notes += '\nRequires Admin Attention: More than one customer is using this phone.  (What additional information could you use here?)'
+			order.requires_admin_attention = True
+			order.save()
+
+
+
 
 		return redirect('orders:customer_event', customer_id=customer.pk, event='order-just-placed')
 
