@@ -68,11 +68,11 @@ def order(request, customer_id=None):
 		order = Order.objects.create(customer=customer, deliveryday=deliveryday)
 
 		if Customer.objects.filter(address=customer.address).count() > 1:
-			order.notes += '\nRequires Admin Attention: More than one customer is using this address.'
+			order.notes += '\nRequires Admin Attention: More than one customer is using this address.  (What additional information could you use here?)'
 			order.requires_admin_attention = True
 			order.save()
 		if customer.email and Customer.objects.filter(email=customer.email).count() > 1:
-			order.notes += '\nRequires Admin Attention: More than one customer is using this email.'
+			order.notes += '\nRequires Admin Attention: More than one customer is using this email.  (What additional information could you use here?)'
 			order.requires_admin_attention = True
 			order.save()
 

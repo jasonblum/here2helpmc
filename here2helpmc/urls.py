@@ -27,7 +27,6 @@ urlpatterns = [
 
     path('map/', RedirectView.as_view(url=settings.GOOGLE_MAP_OF_DROPOFF_LOCATIONS), name='map'),
 
-	path('sentry-debug/', trigger_error),
 
 ]
 
@@ -36,6 +35,9 @@ if settings.DEBUG:
     import debug_toolbar
     urlpatterns += [
         path('__debug__/', include(debug_toolbar.urls)),
+
+	path('error/', trigger_error),
+
     ]
 
 

@@ -6,6 +6,8 @@ from django.db import models
 from django.shortcuts import render, redirect, reverse
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.html import format_html
+from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 
 from address.models import AddressField
@@ -125,7 +127,25 @@ class DeliveryDayFilter(admin.SimpleListFilter):
 			return queryset
 		
 		
-		
+
+class BaseModelAdmin(admin.ModelAdmin):
+	formfield_overrides = {
+		models.CharField: {'widget': TextInput(attrs={'size':'80'})},
+		AddressField: {'widget': AddressWidget(attrs={'size':'80'})},
+		models.EmailField: {'widget': EmailInput(attrs={'size':'80'})}
+	}
+	class Media:
+		js = (
+			'https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js',
+			'shared/jQuery-Mask-Plugin-master/dist/jquery.mask.min.js', 
+			'shared/admin.js', 
+		)
+		css = {'all': ('https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css', )}
+
+	class Meta:
+		abstract = True
+
+
 		
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
@@ -137,7 +157,7 @@ class OrderAdmin(admin.ModelAdmin):
 		'customer__comments', 
 		'customer__notes', 
 	]
-	list_display = ('status', 'requires_admin_attention_flag', 'customer_link', 'customer_zip', 'dt_created', 'dt_ready', 'driver', 'deliveryday', 'dt_delivered', 'dt_cancelled', 'quick_note', )
+	list_display = ('status', 'deliveryday', 'requires_admin_attention_flag', 'customer_link', 'customer_zip', 'driver', 'dt_created', 'dt_ready', 'dt_delivered', 'dt_cancelled', 'quick_note', )
 	list_editable = ('quick_note', )
 	list_filter = (DeliveryDayFilter, 'status', DriverFilter, 'customer_zip', )
 	readonly_fields = ('status', 'customer_details')
@@ -158,15 +178,10 @@ class OrderAdmin(admin.ModelAdmin):
 
 
 @admin.register(Customer)
-class CustomerAdmin(admin.ModelAdmin):
+class CustomerAdmin(BaseModelAdmin):
 	search_fields = ['email', 'address__raw', ]
 	list_display = ('passphrase', 'address', 'email', 'phone', 'orders_created', 'orders_delivered', 'dt_created', )
 	list_filter = ('address__locality', )
-	formfield_overrides = {
-		models.CharField: {'widget': TextInput(attrs={'size':'60'})},
-		AddressField: {'widget': AddressWidget(attrs={'size':'80'})},
-		models.EmailField: {'widget': EmailInput(attrs={'size':'60'})},
-	}
 
 	def has_add_permission(self, request, obj=None):
 		return False
@@ -188,12 +203,23 @@ class CustomerAdmin(admin.ModelAdmin):
 		
 		
 
-
 @admin.register(Supporter)
-class SupporterAdmin(admin.ModelAdmin):
-	list_display = ('first_name', 'last_name', 'email', 'phone', 'address', 'closest_dropoff_location', 'is_driver', )
-	search_fields = ['first_name', 'last_name', 'email', 'phone', 'address__raw', ]
+class SupporterAdmin(BaseModelAdmin):
+	list_display = ('first_name', 'last_name', 'email', 'phone', 'address', 'closest_dropoff_location', 'is_driver', 'orders_if_driver')
+	search_fields = ['first_name', 'last_name', 'email', 'phone', 'address__raw', 'notes', ]
 	list_filter = ('is_driver', )
+	list_select_related = ('closest_dropoff_location', )
+
+	def orders_if_driver(self, obj):
+		order_count = obj.orders.count()
+		if order_count:
+			url = reverse('admin:orders_order_changelist') + '?driver__id__exact=' + str(obj.id)
+			return format_html('<a href="{}">{} Order(s)</a>', url, order_count)
+		else:
+			return ''
+	orders_if_driver.short_description = "Orders (if Driver)"
+
+
 
 
 @admin.register(DropoffLocation)
