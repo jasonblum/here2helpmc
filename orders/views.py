@@ -21,7 +21,7 @@ from .forms import StartForm, CustomerForm
 def get_deliverydays(customer):
 	this_week_start = pendulum.now().start_of('week').subtract(days=1) #Weeks are Sunday-Saturday
 
-	potential_deliverydays = DeliveryDay.objects.filter(_date__gte=this_week_start).order_by('_date')[:10]
+	potential_deliverydays = DeliveryDay.objects.filter(_date__gte=this_week_start, is_active=True).order_by('_date')[:10]
 
 	deliverydays = defaultdict(list)
 	
@@ -64,7 +64,7 @@ def order(request, customer_id=None):
 
 	# Manually set language to customer.preferred_language? (https://docs.djangoproject.com/en/3.1/topics/i18n/translation/#explicitly-setting-the-active-language)
 	if request.POST and customer_form.is_valid():
-		deliveryday = get_object_or_404(DeliveryDay, pk=request.POST['deliveryday'])
+		deliveryday = get_object_or_404(DeliveryDay, pk=request.POST['deliveryday'], is_active=True)
 		customer = customer_form.save()
 		order = Order.objects.create(customer=customer, deliveryday=deliveryday)
 

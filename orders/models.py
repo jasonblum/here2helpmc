@@ -33,6 +33,7 @@ class DeliveryDay(BaseModel):
     _week_of_year = models.PositiveSmallIntegerField(blank=True)
     description = models.CharField(max_length=255, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         self._week_of_year = self.date.add(days=1).week_of_year if not self.date.day_of_week else self.date.week_of_year

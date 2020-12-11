@@ -101,10 +101,11 @@ class DriverFilter(admin.SimpleListFilter):
 	parameter_name = 'driver__id__exact'
 
 	def lookups(self, request, model_admin):
-		supporter_drivers = Supporter.objects.filter(is_driver=True, orders__isnull=False)
+		supporter_drivers = Supporter.objects.filter(is_driver=True, orders__isnull=False).distinct()
 		drivers = []
 		for sd in supporter_drivers:
 			drivers.append( (sd.pk, sd) )
+
 		return drivers
 
 	def queryset(self, request, queryset):
@@ -229,7 +230,8 @@ class DonationAdmin(BaseModelAdmin):
 
 @admin.register(DeliveryDay)
 class DeliveryDayAdmin(BaseModelAdmin):
-	list_display = ('__str__', 'description', 'number_of_orders', 'day_of_week_as_string', 'week_of_year', 'is_future', )
+	list_display = ('__str__', 'description', 'number_of_orders', 'day_of_week_as_string', 'week_of_year', 'is_future', 'is_active', )
+	list_filter = ('is_active', '_date', )
 	
 	def is_future(self, obj):
 		return obj.date.is_future()
