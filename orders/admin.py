@@ -62,6 +62,11 @@ def assign_these_orders_to_a_driver(modeladmin, request, queryset):
 	selected_order_ids = [o.id for o in queryset]
 	drivers = Supporter.objects.filter(is_driver=True)
 	orders = Order.objects.filter(pk__in=selected_order_ids, status='created')
+
+	if not orders.order_by().values('deliveryday').distinct().count() == 1:
+		messages.error(request, f'You selected orders with different Delivery Days.')
+		return redirect('admin:orders_order_changelist')
+
 	return render(request, 'orders/assign_orders_to_drivers.html', {
 		'orders':orders,
 		'drivers': drivers,
