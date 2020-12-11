@@ -13,7 +13,12 @@ from django.utils.safestring import mark_safe
 from address.models import AddressField
 from address.forms import AddressWidget
 
+from import_export import resources
+from import_export.admin import ExportActionMixin
+
 from .models import Order, Customer, School, Supporter, Donation, DropoffLocation, DeliveryDay
+
+
 
 
 def do_something_with_these_orders(modeladmin, request, queryset):
@@ -103,9 +108,7 @@ class DriverFilter(admin.SimpleListFilter):
 		else:
 			return queryset
 		
-		
-		
-		
+
 class DeliveryDayFilter(admin.SimpleListFilter):
 	title = 'Delivery Day'
 	parameter_name = 'deliveryday__id__exact'
@@ -128,7 +131,7 @@ class DeliveryDayFilter(admin.SimpleListFilter):
 		
 		
 
-class BaseModelAdmin(admin.ModelAdmin):
+class BaseModelAdmin(ExportActionMixin, admin.ModelAdmin):
 	formfield_overrides = {
 		models.CharField: {'widget': TextInput(attrs={'size':'80'})},
 		AddressField: {'widget': AddressWidget(attrs={'size':'80'})},
@@ -148,7 +151,7 @@ class BaseModelAdmin(admin.ModelAdmin):
 
 		
 @admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
+class OrderAdmin(BaseModelAdmin):
 	search_fields = [
 		'notes', 
 		'customer__address__raw', 
@@ -161,7 +164,7 @@ class OrderAdmin(admin.ModelAdmin):
 	list_editable = ('quick_note', )
 	list_filter = (DeliveryDayFilter, 'status', DriverFilter, 'customer_zip', )
 	readonly_fields = ('status', 'customer_details')
-	actions = (list_addresses, assign_these_orders_to_a_driver, get_email_to_send_driver, set_status_to_created, do_something_with_these_orders, do_something_else_with_these_orders, )
+	actions = (list_addresses, assign_these_orders_to_a_driver, get_email_to_send_driver, set_status_to_created, do_something_with_these_orders, do_something_else_with_these_orders, *ExportActionMixin.actions, )
 
 	def has_add_permission(self, request, obj=None):
 		return False
@@ -175,8 +178,6 @@ class OrderAdmin(admin.ModelAdmin):
 	requires_admin_attention_flag.short_description='Attention!'
 
 
-
-
 @admin.register(Customer)
 class CustomerAdmin(BaseModelAdmin):
 	search_fields = ['email', 'address__raw', ]
@@ -185,22 +186,6 @@ class CustomerAdmin(BaseModelAdmin):
 
 	def has_add_permission(self, request, obj=None):
 		return False
-
-
-# class FilterByDriversZipCode(admin.SimpleListFilter):
-# 	title = 'Driver\'s Zip Code (if driver)'
-# 	parameter_name = 'zip' # you can put anything here
-
-# 	def lookups(self, request, model_admin):
-# 		zips = list((z, z) for z in Supporter.objects.filter(is_driver=True).values_list('address__locality__postal_code', flat=True).distinct())
-# 		return zips
-
-# 	def queryset(self, request, queryset):
-# 		if self.value():
-# 			return queryset.distinct().filter(is_driver=True, address__locality__postal_code=self.value())
-# 		else:
-# 			return queryset
-		
 		
 
 @admin.register(Supporter)
@@ -220,30 +205,41 @@ class SupporterAdmin(BaseModelAdmin):
 	orders_if_driver.short_description = "Orders (if Driver)"
 
 
-
-
 @admin.register(DropoffLocation)
-class DropoffLocationAdmin(admin.ModelAdmin):
+class DropoffLocationAdmin(BaseModelAdmin):
 	list_display = ('__str__', 'number_of_supporters')
 
 
 @admin.register(School)
-class SchoolAdmin(admin.ModelAdmin):
+class SchoolAdmin(BaseModelAdmin):
 	list_display = ('mcps_school_id', 'name', 'school_type', 'address', 'raw_address', 'phone', )
 
 
 @admin.register(Donation)
-class DonationAdmin(admin.ModelAdmin):
+class DonationAdmin(BaseModelAdmin):
 	search_fields = ('supporter', )
 	list_filter = ('method', )
 	list_display = ('__str__', 'dt_created', 'date_received', 'date_thanked', 'thanked_by', 'ok_to_publicly_recognize', )	
 
 
 @admin.register(DeliveryDay)
-class DeliveryDayAdmin(admin.ModelAdmin):
+class DeliveryDayAdmin(BaseModelAdmin):
 	list_display = ('__str__', 'description', 'number_of_orders', 'day_of_week_as_string', 'week_of_year', 'is_future', )
 	
 	def is_future(self, obj):
 		return obj.date.is_future()
 	is_future.boolean=True
+
+
+
+
+# # https://django-import-export.readthedocs.io/ stuff
+
+# class OrderResource(resources.ModelResource):
+#     class Meta:
+#         model = Order
+
+# class SupporterResource(resources.ModelResource):
+#     class Meta:
+#         model = Supporter
 

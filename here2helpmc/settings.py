@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'address',
     'djrichtextfield',
+    'import_export',
 
     # ALLAUTH SOCIAL PROVIDERS 
     'allauth.socialaccount.providers.google',    
