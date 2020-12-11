@@ -208,7 +208,7 @@ class Order(BaseModel):
 
         if self.dt_cancelled:
             self.status = 'cancelled'
-        if self.dt_delivered:
+        elif self.dt_delivered:
             self.status = 'delivered'
         elif self.dt_ready:
             self.status = 'ready'
