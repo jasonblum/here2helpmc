@@ -123,7 +123,7 @@ class Supporter(BaseModel):
 class Customer(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     passphrase = models.CharField(verbose_name=_('Passphrase'), max_length=20, help_text=_('Enter a name, word or phrase you can use next time to fill out most of this form for you.'))
-    address = AddressField(verbose_name=_('Street Address'))
+    address = AddressField(verbose_name=_('Street Address'), related_name='customers')
     phone = models.CharField(verbose_name=_('Phone'), max_length=20, help_text='This should preferably be a mobile phone number that can receive text messages.', validators=[MinLengthValidator(10)])
     phone_can_receive_texts = models.BooleanField(default=False, verbose_name=_('Texts?'), help_text=_('Can receive text messages?'))
     secondary_phone = models.CharField(verbose_name=_('Secondary Phone'), max_length=20, help_text='(301) 123-4567', blank=True, null=True, validators=[MinLengthValidator(10)])
@@ -262,7 +262,7 @@ DONATION_METHOD_CHOICES = (
 
 
 class Donation(BaseModel):
-    supporter = models.ForeignKey(Supporter, on_delete=models.PROTECT)
+    supporter = models.ForeignKey(Supporter, on_delete=models.PROTECT, related_name='donations')
     amount = models.DecimalField(max_digits=6, decimal_places=2)
     method = models.CharField(max_length=6, choices=DONATION_METHOD_CHOICES)
     payment_details = models.CharField(max_length=254, null=True, blank=True, help_text='Check #, Credit Card type, etc.')
