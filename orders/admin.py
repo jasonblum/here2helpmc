@@ -63,7 +63,10 @@ def assign_these_orders_to_a_driver(modeladmin, request, queryset):
 	drivers = Supporter.objects.filter(is_driver=True)
 	orders = Order.objects.filter(pk__in=selected_order_ids, status='created')
 
-	if not orders.order_by().values('deliveryday').distinct().count() == 1:
+	if not orders:
+		messages.error(request, f'You didn\'t select any orders with a status of \'created\'.')
+		return redirect('admin:orders_order_changelist')
+	elif orders.order_by().values('deliveryday').distinct().count() > 1:
 		messages.error(request, f'You selected orders with different Delivery Days.')
 		return redirect('admin:orders_order_changelist')
 
