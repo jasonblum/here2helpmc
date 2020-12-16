@@ -2,7 +2,7 @@ from datetime import datetime
 import pendulum
 import uuid
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator, MinLengthValidator
 from django.db import models
 from django.db.models import Count
@@ -34,6 +34,11 @@ class DeliveryDay(BaseModel):
     description = models.CharField(max_length=255, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
+
+    def clean(self):
+        if self.number_of_orders and not self.is_active:
+            url = reverse('admin:orders_order_changelist') + f'?deliveryday__id__exact={self.pk}'
+            raise ValidationError(mark_safe(f'Please first reschedule <a href="{url}">{self.number_of_orders} Orders currently associated with this Delivery Day</a>.'))
 
     def save(self, *args, **kwargs):
         self._week_of_year = self.date.add(days=1).week_of_year if not self.date.day_of_week else self.date.week_of_year
