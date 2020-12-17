@@ -21,22 +21,6 @@ from .models import Order, Customer, School, Supporter, Donation, DropoffLocatio
 
 
 
-def do_something_with_these_orders(modeladmin, request, queryset):
-	selected_order_ids = [o.id for o in queryset]
-	orders = Order.objects.filter(pk__in=selected_order_ids)
-	return render(request, 'orders/do_something_with_these_orders.html', {
-		'orders':orders,
-	})	
-
-
-def do_something_else_with_these_orders(modeladmin, request, queryset):
-	selected_order_ids = [o.id for o in queryset]
-	orders = Order.objects.filter(pk__in=selected_order_ids)
-	return render(request, 'orders/do_something_with_these_orders.html', {
-		'orders':orders,
-	})	
-
-
 def list_addresses(modeladmin, request, queryset):
 	selected_order_ids = [o.id for o in queryset]
 	orders = Order.objects.filter(pk__in=selected_order_ids)
@@ -75,26 +59,45 @@ def assign_these_orders_to_a_driver(modeladmin, request, queryset):
 		'drivers': drivers,
 	})	
 
-def get_email_to_send_driver(modeladmin, request, queryset):
+
+
+def get_orders_ready_for_delivery(queryset):
 	selected_order_ids = [o.id for o in queryset]
 	orders = Order.objects.filter(pk__in=selected_order_ids, status='processed')
+	error_message = ''
 
 	if not orders:
-		messages.error(request, f'You didn\'t select any orders with a status of \'processed\'.')
-		return redirect('admin:orders_order_changelist')
+		error_message = 'You didn\'t select any orders with a status of \'processed\'.'
+	elif orders.order_by().values('driver').distinct().count() != 1:
+		error_message = 'You selected orders with more than one driver.'
+	elif orders.order_by().values('deliveryday').distinct().count() != 1:
+		error_message = 'You selected orders with more than one delivery day.'
 
-	if orders.order_by().values('driver').distinct().count() != 1:
-		messages.error(request, f'You selected orders with more than one driver.')
+	return orders, error_message
+
+
+def get_email_to_send_driver(modeladmin, request, queryset):
+	orders, error_message = get_orders_ready_for_delivery(queryset)
+	if error_message:
+		messages.error(request, error_message)
 		return redirect('admin:orders_order_changelist')
 
 	driver = orders[0].driver #they must all have the same driver at this point.
-
 	email = render_to_string('emails/email_to_driver.html', {'driver': driver, 'orders':orders})
-
 	return render(request, 'orders/email_to_driver.html', {'driver':driver, 'orders':orders, 'email':email})
+get_email_to_send_driver.short_description = 'Email Driver.'
+
+def get_packer_bag_prep(modeladmin, request, queryset):
+	orders, error_message = get_orders_ready_for_delivery(queryset)
+	if error_message:
+		messages.error(request, error_message)
+		return redirect('admin:orders_order_changelist')
+
+	driver = orders[0].driver #they must all have the same driver at this point.
+	return render(request, 'reports/packerprep.html', {'driver':driver, 'orders':orders})
+get_packer_bag_prep.short_description = 'Generate Bag Prep report.'
 
 		
-
 
 
 
@@ -142,7 +145,7 @@ class DeliveryDayFilter(admin.SimpleListFilter):
 
 class BaseModelAdmin(ExportActionMixin, admin.ModelAdmin):
 	formfield_overrides = {
-		models.CharField: {'widget': TextInput(attrs={'size':'80'})},
+		models.CharField: {'widget': TextInput(attrs={'size':'20'})},
 		AddressField: {'widget': AddressWidget(attrs={'size':'80'})},
 		models.EmailField: {'widget': EmailInput(attrs={'size':'80'})}
 	}
@@ -173,7 +176,7 @@ class OrderAdmin(BaseModelAdmin):
 	list_editable = ('quick_note', )
 	list_filter = (DeliveryDayFilter, 'status', DriverFilter, 'customer_zip', )
 	readonly_fields = ('status', 'customer_details')
-	actions = (list_addresses, assign_these_orders_to_a_driver, get_email_to_send_driver, set_status_to_created, do_something_with_these_orders, do_something_else_with_these_orders, *ExportActionMixin.actions, )
+	actions = (list_addresses, assign_these_orders_to_a_driver, get_email_to_send_driver, get_packer_bag_prep, set_status_to_created, *ExportActionMixin.actions, )
 
 	def has_add_permission(self, request, obj=None):
 		return False
@@ -184,6 +187,8 @@ class OrderAdmin(BaseModelAdmin):
 
 	def customer_link(self, obj):
 		return mark_safe('<a href="{}">{}</a>'.format(reverse('admin:orders_customer_change', args=[obj.pk]), obj.customer))
+	customer_link.short_description = 'Customer'
+
 	requires_admin_attention_flag.short_description='Attention!'
 
 

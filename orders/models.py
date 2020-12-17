@@ -241,7 +241,7 @@ class Order(BaseModel):
     def customer_details(self):
         return mark_safe(f'''<li>Address: {self.customer.address}</li>
 <li>Phone: {self.customer.phone} (Can receive texts? {self.customer.phone_can_receive_texts})</li>
-<li>Secondary Phone: {self.customer.phone} (Can receive texts? {self.customer.secondary_phone_can_receive_texts})</li>
+<li>Secondary Phone: {self.customer.secondary_phone} (Can receive texts? {self.customer.secondary_phone_can_receive_texts})</li>
 <li>Email: {self.customer.email}</li>
 <li>Secondary Email: {self.customer.secondary_email}</li>
 <li>Apartment: {self.customer.apartment_number}</li>
