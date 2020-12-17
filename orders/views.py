@@ -69,21 +69,20 @@ def order(request, customer_id=None):
 		order = Order.objects.create(customer=customer, deliveryday=deliveryday)
 
 		if Customer.objects.filter(address=customer.address).count() > 1:
-			order.notes += '\nRequires Admin Attention: More than one customer is using this address.  (What additional information could you use here?)'
-			order.requires_admin_attention = True
-			order.save()
-			
-		if (customer.email and Customer.objects.filter(Q(email=customer.email)|Q(secondary_email=customer.email)).count() > 1) or \
-			(customer.secondary_email and Customer.objects.filter(Q(email=customer.secondary_email)|Q(secondary_email=customer.secondary_email)).count() > 1):
-			order.notes += '\nRequires Admin Attention: More than one customer is using this email.  (What additional information could you use here?)'
-			order.requires_admin_attention = True
-			order.save()
+			requires_admin_attention_note = ''
 
-		if (customer.phone and Customer.objects.filter(Q(phone=customer.phone)|Q(secondary_phone=customer.phone)).count() > 1) or \
-			(customer.secondary_phone and Customer.objects.filter(Q(phone=customer.secondary_phone)|Q(secondary_phone=customer.secondary_phone)).count() > 1):
-			order.notes += '\nRequires Admin Attention: More than one customer is using this phone.  (What additional information could you use here?)'
-			order.requires_admin_attention = True
-			order.save()
+			if (customer.email and Customer.objects.filter(Q(email=customer.email)|Q(secondary_email=customer.email)).count() > 1) or \
+				(customer.secondary_email and Customer.objects.filter(Q(email=customer.secondary_email)|Q(secondary_email=customer.secondary_email)).count() > 1):
+				requires_admin_attention_note += '\nRequires Admin Attention: More than one customer is using this address and email.  (What additional information could you use here?)'
+
+			if (customer.phone and Customer.objects.filter(Q(phone=customer.phone)|Q(secondary_phone=customer.phone)).count() > 1) or \
+				(customer.secondary_phone and Customer.objects.filter(Q(phone=customer.secondary_phone)|Q(secondary_phone=customer.secondary_phone)).count() > 1):
+				requires_admin_attention_note += '\nRequires Admin Attention: More than one customer is using this address and phone.  (What additional information could you use here?)'
+
+			if requires_admin_attention_note:
+				order.notes += requires_admin_attention_note
+				order.requires_admin_attention = True
+				order.save()
 
 
 
