@@ -12,9 +12,7 @@
         </div>
         <div class="card-body">
             <h4 class='card-title'>
-                <b>{{ stats.customers }}</b> families, 
-                in <strong>{{ stats.zipcodes_served }}</strong> Montgomery County zip codes, 
-                with children in <strong>{{ stats.school_communities_served }}</strong> MC Public Schools,
+                <b>{{ stats.customers }}</b> families 
                 have received <strong>{{ stats.total_pounds_delivered|floatformat:2 }}</strong> pounds of food in <strong>{{ stats.orders_delivered }}</strong> orders since <strong>{{ stats.start_date|date:"F j, Y" }}</strong>!
             </h5>
 

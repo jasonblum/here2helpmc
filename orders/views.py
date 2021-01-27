@@ -107,7 +107,7 @@ def get_stats():
 		'orders_ready': Order.objects.filter(status='ready').count(),
 		'orders_delivered': Order.objects.filter(status='delivered').count(),
 		'total_pounds_delivered': Order.objects.filter(status='delivered').distinct().count() * settings.ORDER_WEIGHT,
-		'customers': Customer.objects.count(),
+		'customers': Customer.objects.filter(orders__status='delivered').count(),
 		'school_communities_served': School.objects.filter(customers__isnull=False).distinct().count(),
 		'zipcodes_served': Locality.objects.filter(addresses__customers__isnull=False).distinct().count(),	
 		'start_date': Order.objects.order_by('-dt_created').first().dt_created
