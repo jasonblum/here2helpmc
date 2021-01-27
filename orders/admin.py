@@ -230,6 +230,14 @@ class SupporterAdmin(BaseModelAdmin):
 			return ''
 	orders_if_driver.short_description = "Orders (if Driver)"
 
+	def get_readonly_fields(self, request, obj=None):
+		if obj.orders.exclude(status__in=['delivered', 'cancelled']).exists():
+			return ('is_driver', 'can_drive')
+		else:
+			return super(SupporterAdmin, self).get_readonly_fields(request, obj)
+
+
+
 
 @admin.register(DropoffLocation)
 class DropoffLocationAdmin(BaseModelAdmin):
