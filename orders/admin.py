@@ -178,6 +178,7 @@ class OrderAdmin(BaseModelAdmin):
 		'notes', 
 		'customer__address__raw', 
 		'customer__email', 
+		'customer__phone', 
 		'customer__passphrase', 
 		'customer__comments', 
 		'customer__notes', 
@@ -204,7 +205,7 @@ class OrderAdmin(BaseModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(BaseModelAdmin):
-	search_fields = ['email', 'address__raw', ]
+	search_fields = ['email', 'address__raw', 'phone', ]
 	list_display = ('passphrase', 'address', 'email', 'phone', 'orders_created', 'orders_delivered', 'dt_created', )
 	list_filter = ('address__locality', )
 
