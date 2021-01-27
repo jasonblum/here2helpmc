@@ -87,6 +87,7 @@ def get_email_to_send_driver(modeladmin, request, queryset):
 	return render(request, 'orders/email_to_driver.html', {'driver':driver, 'orders':orders, 'email':email})
 get_email_to_send_driver.short_description = 'Email Driver.'
 
+
 def get_packer_bag_prep(modeladmin, request, queryset):
 	orders, error_message = get_orders_ready_for_delivery(queryset)
 	if error_message:
@@ -97,7 +98,16 @@ def get_packer_bag_prep(modeladmin, request, queryset):
 	return render(request, 'reports/packerprep.html', {'driver':driver, 'orders':orders})
 get_packer_bag_prep.short_description = 'Generate Bag Prep report.'
 
-		
+
+def set_is_driver_to_false(modeladmin, request, queryset):
+	selected_supporter_ids = [o.id for o in queryset]
+	supporters = Supporter.objects.filter(pk__in=selected_supporter_ids)
+	for supporter in supporters:
+		supporter.is_driver = False
+		supporter.save()
+	messages.success(request, f'{len(supporters)} Supporters\' \'is_driver\' set to False.')
+	return redirect('admin:orders_supporter_changelist')
+
 
 
 
@@ -204,10 +214,11 @@ class CustomerAdmin(BaseModelAdmin):
 
 @admin.register(Supporter)
 class SupporterAdmin(BaseModelAdmin):
-	list_display = ('first_name', 'last_name', 'email', 'phone', 'address', 'closest_dropoff_location', 'is_driver', 'orders_if_driver')
+	list_display = ('first_name', 'last_name', 'email', 'phone', 'address', 'closest_dropoff_location', 'can_drive', 'is_driver', 'orders_if_driver')
 	search_fields = ['first_name', 'last_name', 'email', 'phone', 'address__raw', 'notes', ]
-	list_filter = ('is_driver', )
+	list_filter = ('is_driver', 'can_drive', )
 	list_select_related = ('closest_dropoff_location', )
+	actions = (set_is_driver_to_false, *ExportActionMixin.actions, )
 
 	def orders_if_driver(self, obj):
 		order_count = obj.orders.count()

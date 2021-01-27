@@ -112,7 +112,8 @@ class Supporter(BaseModel):
     phone = models.CharField(max_length=20, help_text='(301) 123-4567', validators=[MinLengthValidator(10)], blank=True, null=True)
     address = AddressField(blank=True, null=True)
     closest_dropoff_location = models.ForeignKey(DropoffLocation, on_delete=models.PROTECT, related_name='supporters', blank=True, null=True)
-    is_driver = models.BooleanField(default=False)
+    can_drive = models.BooleanField(default=False, help_text='Is willing to drive.')
+    is_driver = models.BooleanField(default=False, help_text='Is currently actively driving.')
     notes = models.TextField(verbose_name=_('Notes'), blank=True, null=True)
 
     class Meta:
@@ -121,6 +122,11 @@ class Supporter(BaseModel):
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
+
+    def save(self, *args, **kwargs): 
+        if not self.can_drive:
+            self.is_driver = False
+        super(Supporter, self).save(*args, **kwargs) 
 
 
 
