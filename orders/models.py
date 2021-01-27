@@ -123,7 +123,10 @@ class Supporter(BaseModel):
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
 
-    def save(self, *args, **kwargs): 
+    def save(self, *args, **kwargs):
+        if not self.is_driver and self.orders.exist():
+            raise Exception(f'{self} must be a driver, until {self.orders.count()} can be reassigned.')
+
         if not self.can_drive:
             self.is_driver = False
         super(Supporter, self).save(*args, **kwargs) 
